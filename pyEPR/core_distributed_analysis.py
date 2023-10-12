@@ -37,6 +37,8 @@ from .reports import (plot_convergence_f_vspass, plot_convergence_max_df,
                       plot_convergence_solved_elem)
 from .toolbox.pythonic import print_NoNewLine
 
+# HFSS 2022 Update
+from win32com.client import Dispatch
 
 # class AnsysAnalysisBase():
 #
@@ -1572,15 +1574,20 @@ class DistributedAnalysis(object):
         self.solutions.create_report(
             report_name, "Pass", ycomp, params, pass_name='AdaptivePass')
 
-        # Properties of lines
-        curves = [f"{report_name}:re(Mode({i})):Curve1" for i in range(
-            1, 1+self.n_modes)]
-        set_property(report, 'Attributes', curves, 'Line Width', 3)
-        set_property(report, 'Scaling',
-                     f"{report_name}:AxisY1", 'Auto Units', False)
-        set_property(report, 'Scaling', f"{report_name}:AxisY1", 'Units', 'g')
-        set_property(report, 'Legend',
-                     f"{report_name}:Legend", 'Show Solution Name', False)
+        #HFSS2022 Update
+        _app = Dispatch('AnsoftHfss.HfssScriptInterface')
+        desktop = _app.GetAppDesktop()
+        _ansys_version_ = desktop.GetVersion()
+        if _ansys_version_ <= '2022':
+            # Properties of lines
+            curves = [f"{report_name}:re(Mode({i})):Curve1" for i in range(
+                1, 1 + self.n_modes)]
+            set_property(report, 'Attributes', curves, 'Line Width', 3)
+            set_property(report, 'Scaling',
+                         f"{report_name}:AxisY1", 'Auto Units', False)
+            set_property(report, 'Scaling', f"{report_name}:AxisY1", 'Units', 'g')
+            set_property(report, 'Legend',
+                         f"{report_name}:Legend", 'Show Solution Name', False)
 
         if save_csv:  # Save
             try:
